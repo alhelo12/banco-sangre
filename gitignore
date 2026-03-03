@@ -1,0 +1,21 @@
+# Secretos
+.env
+
+# Certificados SSL
+certs/
+*.pem
+
+# Python
+__pycache__/
+venv/
+*.pyc
+
+# Node
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
