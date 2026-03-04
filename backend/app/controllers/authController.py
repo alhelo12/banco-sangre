@@ -82,3 +82,14 @@ def login(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
 @router.get("/me", response_model=UsuarioOut)
 def me(current_user: Usuario = Depends(get_current_user)):
     return current_user
+
+
+# ── GET /api/auth/validar-matricula/{matricula} ───────────
+# Endpoint publico para validar matriculas en el registro
+@router.get("/validar-matricula/{matricula}")
+def validar_matricula(matricula: str, db: Session = Depends(get_db)):
+    prefijo = matricula.split("-")[0].upper() if "-" in matricula else matricula.upper()
+    config  = db.query(ConfiguracionRol).filter(ConfiguracionRol.prefijo == prefijo).first()
+    if not config:
+        raise HTTPException(status_code=404, detail="Matricula no reconocida")
+    return {"prefijo": config.prefijo, "rol": config.rol, "descripcion": config.descripcion}

@@ -101,7 +101,7 @@ async function validarMatricula() {
   clearTimeout(timeout);
   timeout = setTimeout(async () => {
     try {
-      const { data } = await axios.get(`/api/configuracion-roles/validar/${matricula.value}`);
+      const { data } = await axios.get(`/api/auth/validar-matricula/${matricula.value}`);
       rolDetectado.value = data.rol;
     } catch {
       matriculaError.value = "Matrícula no reconocida";

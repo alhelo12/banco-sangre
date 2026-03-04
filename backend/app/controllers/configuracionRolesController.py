@@ -75,14 +75,4 @@ def eliminar(id: int, db: Session = Depends(get_db)):
     db.commit()
 
 
-# ── GET /api/configuracion-roles/validar/{matricula} ──────
-# Endpoint publico (sin login) para validar matriculas en el registro
-@router.get("/validar/{matricula}", response_model=ConfiguracionRolOut, dependencies=[])
-def validar_matricula(matricula: str, db: Session = Depends(get_db)):
-    prefijo = matricula.split("-")[0].upper() if "-" in matricula else matricula.upper()
-    config  = db.query(ConfiguracionRol).filter(
-        ConfiguracionRol.prefijo == prefijo
-    ).first()
-    if not config:
-        raise HTTPException(status_code=404, detail="Matricula no reconocida")
-    return config
+
