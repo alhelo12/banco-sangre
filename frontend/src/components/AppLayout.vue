@@ -9,21 +9,31 @@
         <RouterLink to="/">
           <i class="pi pi-home" /> Dashboard
         </RouterLink>
-        <RouterLink to="/configuracion-roles">
-          <i class="pi pi-cog" /> Configuración
-        </RouterLink>
-        <RouterLink to="/usuarios">
-          <i class="pi pi-shield" /> Usuarios
-        </RouterLink>
-        <RouterLink to="/donantes">
-          <i class="pi pi-users" /> Donantes
-        </RouterLink>
-        <RouterLink to="/donaciones">
-          <i class="pi pi-heart" /> Donaciones
-        </RouterLink>
-        <RouterLink to="/inventario">
-          <i class="pi pi-box" /> Inventario
-        </RouterLink>
+
+        <!-- Solo admin -->
+        <template v-if="rol === 'admin'">
+          <RouterLink to="/configuracion-roles">
+            <i class="pi pi-cog" /> Configuración
+          </RouterLink>
+          <RouterLink to="/usuarios">
+            <i class="pi pi-shield" /> Usuarios
+          </RouterLink>
+        </template>
+
+        <!-- Admin y enfermero -->
+        <template v-if="rol === 'admin' || rol === 'enfermero'">
+          <RouterLink to="/donantes">
+            <i class="pi pi-users" /> Donantes
+          </RouterLink>
+          <RouterLink to="/donaciones">
+            <i class="pi pi-heart" /> Donaciones
+          </RouterLink>
+          <RouterLink to="/inventario">
+            <i class="pi pi-box" /> Inventario
+          </RouterLink>
+        </template>
+
+        <!-- Todos los roles -->
         <RouterLink to="/solicitudes">
           <i class="pi pi-file" /> Solicitudes
         </RouterLink>
@@ -50,11 +60,13 @@
 </template>
 
 <script setup>
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/authStore";
 
 const auth   = useAuthStore();
 const router = useRouter();
+const rol    = computed(() => auth.user?.rol);
 
 function handleLogout() {
   auth.logout();
