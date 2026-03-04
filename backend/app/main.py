@@ -14,7 +14,8 @@ from app.controllers import (
     inventarioController,
     solicitudesController,
     transfusionesController,
-    usuariosController
+    usuariosController,
+    configuracionRolesController
 )
 
 # Crea las tablas en la BD si no existen
@@ -47,3 +48,4 @@ app.include_router(inventarioController.router)
 app.include_router(solicitudesController.router)
 app.include_router(transfusionesController.router)
 app.include_router(usuariosController.router)
+app.include_router(configuracionRolesController.router)

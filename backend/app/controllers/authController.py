@@ -2,15 +2,26 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from jose import JWTError
+from typing import Optional
+from pydantic import BaseModel, EmailStr
 
 from app.dbConfig.databaseSession import get_db
-from app.models.usuarioModel import Usuario
-from app.schemas.authSchema import UsuarioCreate, UsuarioOut, Token
+from app.models.usuarioModel import Usuario, RolEnum
+from app.models.configuracionRolModel import ConfiguracionRol
+from app.schemas.authSchema import UsuarioOut, Token
 from app.core.security import hash_password, verify_password, create_access_token, decode_token
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
+
+
+# ── Schema de registro con matricula ─────────────────────
+class RegistroConMatricula(BaseModel):
+    nombre:    str
+    email:     EmailStr
+    password:  str
+    matricula: str
 
 
 # ── Dependency: obtener usuario autenticado desde el token ──
@@ -34,15 +45,21 @@ def get_current_user(
 
 # ── POST /api/auth/register ───────────────────────────────
 @router.post("/register", response_model=UsuarioOut, status_code=201)
-def register(data: UsuarioCreate, db: Session = Depends(get_db)):
+def register(data: RegistroConMatricula, db: Session = Depends(get_db)):
     if db.query(Usuario).filter(Usuario.email == data.email).first():
         raise HTTPException(status_code=400, detail="El email ya esta registrado")
+
+    # Validar la matricula y obtener el rol
+    prefijo = data.matricula.split("-")[0].upper() if "-" in data.matricula else data.matricula.upper()
+    config  = db.query(ConfiguracionRol).filter(ConfiguracionRol.prefijo == prefijo).first()
+    if not config:
+        raise HTTPException(status_code=400, detail="Matricula no reconocida. Contacta al administrador")
 
     user = Usuario(
         nombre=data.nombre,
         email=data.email,
         password=hash_password(data.password),
-        rol=data.rol,
+        rol=config.rol,
     )
     db.add(user)
     db.commit()
