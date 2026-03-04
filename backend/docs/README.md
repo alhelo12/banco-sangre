@@ -10,6 +10,9 @@ Motor: **PostgreSQL 16**
 usuarios
    (sin relaciones directas con otras tablas)
 
+configuracion_roles
+   (sin relaciones directas, define prefijos de matricula para el registro)
+
 donantes
    │
    └──< donaciones (1 donante puede tener muchas donaciones)
@@ -38,6 +41,10 @@ Almacena los usuarios del sistema. No tiene relaciones con otras tablas.
 | password   | VARCHAR(255) | Contrasena hasheada con bcrypt       |
 | rol        | ENUM         | admin / enfermero / medico           |
 | created_at | TIMESTAMP    | Fecha de creacion                    |
+
+**Usuario admin por defecto:**
+- Email: `admin@bancosangre.com`
+- Password: `admin123`
 
 ---
 
@@ -135,16 +142,52 @@ Registro de entregas de sangre a pacientes.
 
 ---
 
+### 7. `configuracion_roles`
+Define los prefijos de matricula que identifican cada rol al momento del registro.
+
+| Campo       | Tipo         | Descripcion                              |
+|-------------|--------------|------------------------------------------|
+| id          | SERIAL PK    | Identificador unico                      |
+| prefijo     | VARCHAR(20)  | Prefijo de la matricula (Ej: MED, ENF)   |
+| rol         | ENUM         | medico / enfermero                       |
+| descripcion | VARCHAR(100) | Descripcion del grupo (opcional)         |
+
+**Registros iniciales:**
+- `MED` → medico
+- `ENF` → enfermero
+
+> El admin puede agregar, editar o eliminar prefijos desde la app en la seccion Configuracion.
+
+---
+
+## Roles y permisos
+
+| Vista            | Admin | Enfermero | Medico |
+|------------------|-------|-----------|--------|
+| Dashboard        | ✅    | ✅        | ✅     |
+| Configuracion    | ✅    | ❌        | ❌     |
+| Usuarios         | ✅    | ❌        | ❌     |
+| Donantes         | ✅    | ✅        | ❌     |
+| Donaciones       | ✅    | ✅        | ❌     |
+| Inventario       | ✅    | ✅        | ❌     |
+| Solicitudes      | ✅    | ✅        | ✅     |
+| Transfusiones    | ✅    | ✅        | ✅     |
+
+---
+
 ## Flujo principal
 
 ```
-1. Se registra un DONANTE
-2. El donante realiza una DONACION  →  estado: pendiente
-3. La donacion es revisada          →  estado: aprobada / rechazada
-4. Si es aprobada, se agrega al     →  INVENTARIO_SANGRE (disponible: true)
-5. Se recibe una SOLICITUD          →  estado: pendiente
-6. La solicitud es aprobada         →  estado: aprobada
-7. Se asigna una unidad del         →  INVENTARIO a la solicitud
-8. Se registra la TRANSFUSION       →  inventario disponible: false
+1. El admin configura los prefijos de matricula en Configuracion
+2. El personal se registra con su matricula del hospital
+   → el sistema asigna el rol automaticamente segun el prefijo
+3. Se registra un DONANTE
+4. El donante realiza una DONACION  →  estado: pendiente
+5. La donacion es revisada          →  estado: aprobada / rechazada
+6. Si es aprobada, se agrega al     →  INVENTARIO_SANGRE (disponible: true)
+7. Se recibe una SOLICITUD          →  estado: pendiente
+8. La solicitud es aprobada         →  estado: aprobada
+9. Se asigna una unidad del         →  INVENTARIO a la solicitud
+10. Se registra la TRANSFUSION      →  inventario disponible: false
                                         solicitud estado: entregada
 ```

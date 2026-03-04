@@ -35,18 +35,21 @@ El proyecto utiliza una Arquitectura Multicapa para separar responsabilidades y 
 │   │   │   └── baseModels.py
 │   │   ├── controllers/            # Rutas divididas por modulo
 │   │   │   ├── authController.py
+│   │   │   ├── usuariosController.py
 │   │   │   ├── donantesController.py
 │   │   │   ├── donacionesController.py
 │   │   │   ├── inventarioController.py
 │   │   │   ├── solicitudesController.py
-│   │   │   └── transfusionesController.py
+│   │   │   ├── transfusionesController.py
+│   │   │   └── configuracionRolesController.py
 │   │   ├── models/                 # Modelos de datos (SQLAlchemy)
 │   │   │   ├── usuarioModel.py
 │   │   │   ├── donanteModel.py
 │   │   │   ├── donacionModel.py
 │   │   │   ├── inventarioModel.py
 │   │   │   ├── solicitudModel.py
-│   │   │   └── transfusionModel.py
+│   │   │   ├── transfusionModel.py
+│   │   │   └── configuracionRolModel.py
 │   │   ├── schemas/                # Validaciones Pydantic
 │   │   │   ├── authSchema.py
 │   │   │   ├── donanteSchema.py
@@ -70,6 +73,8 @@ El proyecto utiliza una Arquitectura Multicapa para separar responsabilidades y 
 │   │   ├── views/                  # Vistas por modulo
 │   │   │   ├── LoginView.vue
 │   │   │   ├── DashboardView.vue
+│   │   │   ├── ConfiguracionRolesView.vue
+│   │   │   ├── UsuariosView.vue
 │   │   │   ├── DonantesView.vue
 │   │   │   ├── DonacionesView.vue
 │   │   │   ├── InventarioView.vue
@@ -96,7 +101,7 @@ El proyecto utiliza una Arquitectura Multicapa para separar responsabilidades y 
 
 ---
 
-## Base de Datos — 6 Tablas
+## Base de Datos — 7 Tablas
 
 | Tabla | Descripcion |
 |-------|-------------|
@@ -106,6 +111,7 @@ El proyecto utiliza una Arquitectura Multicapa para separar responsabilidades y 
 | `inventario_sangre` | Stock por tipo de sangre |
 | `solicitudes` | Pedidos de sangre |
 | `transfusiones` | Registro de entregas |
+| `configuracion_roles` | Prefijos de matricula para registro automatico de roles |
 
 ---
 
@@ -184,12 +190,28 @@ npm run dev
 ## Flujo de uso
 
 ```
-1. Registrar un usuario en /api/docs → POST /api/auth/register
-2. Iniciar sesion en http://localhost:5173
-3. Crear un donante
-4. Registrar una donacion y cambiarla a "aprobada"
-5. Agregar la unidad al inventario
-6. Crear una solicitud y cambiarla a "aprobada"
-7. Registrar la transfusion con el ID de la solicitud y del inventario
-8. La solicitud cambia a "entregada" y el inventario a "usado" automaticamente
+1. Iniciar sesion con el admin predefinido:
+   Email: admin@bancosangre.com / Password: admin123
+2. Configurar los prefijos de matricula en la seccion Configuracion
+3. El personal se registra en la pantalla de registro con su matricula
+   → el sistema asigna el rol automaticamente segun el prefijo
+4. Crear un donante
+5. Registrar una donacion y cambiarla a "aprobada"
+6. Agregar la unidad al inventario
+7. Crear una solicitud y cambiarla a "aprobada"
+8. Registrar la transfusion con el ID de la solicitud y del inventario
+9. La solicitud cambia a "entregada" y el inventario a "usado" automaticamente
 ```
+
+## Roles y permisos
+
+| Vista            | Admin | Enfermero | Medico |
+|------------------|-------|-----------|--------|
+| Dashboard        | ✅    | ✅        | ✅     |
+| Configuracion    | ✅    | ❌        | ❌     |
+| Usuarios         | ✅    | ❌        | ❌     |
+| Donantes         | ✅    | ✅        | ❌     |
+| Donaciones       | ✅    | ✅        | ❌     |
+| Inventario       | ✅    | ✅        | ❌     |
+| Solicitudes      | ✅    | ✅        | ✅     |
+| Transfusiones    | ✅    | ✅        | ✅     |
