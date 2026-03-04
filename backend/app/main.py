@@ -6,7 +6,7 @@ from app.dbConfig.baseModels import Base
 
 # Importar todos los modelos para que SQLAlchemy los registre
 from app.models import usuarioModel, donanteModel, donacionModel
-from app.models import inventarioModel, solicitudModel, transfusionModel
+from app.models import inventarioModel, solicitudModel, transfusionModel, configuracionRolModel
 from app.controllers import (
     authController,
     donantesController,

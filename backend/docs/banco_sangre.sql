@@ -105,6 +105,23 @@ CREATE TABLE transfusiones (
 );
 
 -- ============================================================
+-- TABLA 7: configuracion_roles
+-- Define los prefijos de matricula que identifican cada rol
+-- ============================================================
+
+CREATE TABLE configuracion_roles (
+    id         SERIAL PRIMARY KEY,
+    prefijo    VARCHAR(20)  NOT NULL UNIQUE,  -- Ej: MED, ENF
+    rol        rol_usuario  NOT NULL,          -- medico, enfermero
+    descripcion VARCHAR(100)                   -- Ej: Medico general
+);
+
+-- Datos iniciales de ejemplo (el admin puede cambiarlos)
+INSERT INTO configuracion_roles (prefijo, rol, descripcion) VALUES
+('MED', 'medico',    'Personal medico'),
+('ENF', 'enfermero', 'Personal de enfermeria');
+
+-- ============================================================
 -- INDICES (mejoran la velocidad de busqueda)
 -- ============================================================
 
@@ -118,6 +135,7 @@ CREATE INDEX idx_solicitudes_tipo_sangre ON solicitudes(tipo_sangre);
 
 -- ============================================================
 -- DATOS INICIALES (usuario admin por defecto)
+-- Email: admin@bancosangre.com (se usa para iniciar sesión)
 -- password: admin123 (hasheada con bcrypt)
 -- ============================================================
 
