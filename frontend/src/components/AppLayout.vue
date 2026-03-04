@@ -9,6 +9,9 @@
         <RouterLink to="/">
           <i class="pi pi-home" /> Dashboard
         </RouterLink>
+        <RouterLink to="/usuarios">
+          <i class="pi pi-shield" /> Usuarios
+        </RouterLink>
         <RouterLink to="/donantes">
           <i class="pi pi-users" /> Donantes
         </RouterLink>
