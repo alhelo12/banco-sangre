@@ -149,6 +149,7 @@ td {
   padding: 0.75rem 1rem;
   border-top: 1px solid #f0f0f0;
   font-size: 0.9rem;
+  color: #333;
 }
 
 .empty { text-align: center; color: #aaa; }
@@ -180,6 +181,7 @@ select {
   cursor: pointer;
   font-weight: 600;
   font-size: 0.9rem;
+  color: #333;
 }
 .btn-primary:hover { background: #b71c1c; }
 
@@ -238,5 +240,6 @@ input:focus, textarea:focus { border-color: #e53935; }
   border: none;
   cursor: pointer;
   font-size: 0.9rem;
+  color: #333;
 }
 </style>

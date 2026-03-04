@@ -154,6 +154,7 @@ td {
   padding: 0.75rem 1rem;
   border-top: 1px solid #f0f0f0;
   font-size: 0.9rem;
+  color: #333;
 }
 
 .empty {
