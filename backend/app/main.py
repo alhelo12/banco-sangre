@@ -1,6 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.dbConfig.databaseSession import engine
+from app.dbConfig.baseModels import Base
+
+# Importar todos los modelos para que SQLAlchemy los registre
+from app.models import usuarioModel, donanteModel, donacionModel
+from app.models import inventarioModel, solicitudModel, transfusionModel
+
+# Crea las tablas en la BD si no existen
+Base.metadata.create_all(bind=engine)
+
 app = FastAPI(
     title="Banco de Sangre API",
     version="1.0.0",
