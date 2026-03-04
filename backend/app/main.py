@@ -7,7 +7,7 @@ from app.dbConfig.baseModels import Base
 # Importar todos los modelos para que SQLAlchemy los registre
 from app.models import usuarioModel, donanteModel, donacionModel
 from app.models import inventarioModel, solicitudModel, transfusionModel
-from app.controllers import authController
+from app.controllers import authController, donantesController
 
 # Crea las tablas en la BD si no existen
 Base.metadata.create_all(bind=engine)
@@ -33,3 +33,4 @@ def health():
     return {"status": "ok", "message": "Banco de Sangre API funcionando"}
 
 app.include_router(authController.router)
+app.include_router(donantesController.router)
