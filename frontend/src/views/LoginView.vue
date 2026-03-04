@@ -4,32 +4,59 @@
 
       <div class="logo">🩸</div>
       <h1>Banco de Sangre</h1>
-      <p class="subtitle">Inicia sesión para continuar</p>
+      <p class="subtitle">{{ modo === 'login' ? 'Inicia sesión para continuar' : 'Crea tu cuenta' }}</p>
 
-      <div class="field">
-        <label>Email</label>
-        <input
-          v-model="email"
-          type="email"
-          placeholder="correo@ejemplo.com"
-        />
-      </div>
+      <!-- ── LOGIN ── -->
+      <template v-if="modo === 'login'">
+        <div class="field">
+          <label>Email</label>
+          <input v-model="email" type="email" placeholder="correo@ejemplo.com" />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input v-model="password" type="password" placeholder="••••••••" @keyup.enter="handleLogin" />
+        </div>
+        <p v-if="error" class="error">{{ error }}</p>
+        <button @click="handleLogin" :disabled="loading">
+          {{ loading ? "Entrando..." : "Iniciar sesión" }}
+        </button>
+        <p class="toggle">
+          ¿No tienes cuenta?
+          <span @click="cambiarModo('registro')">Regístrate aquí</span>
+        </p>
+      </template>
 
-      <div class="field">
-        <label>Contraseña</label>
-        <input
-          v-model="password"
-          type="password"
-          placeholder="••••••••"
-          @keyup.enter="handleLogin"
-        />
-      </div>
-
-      <p v-if="error" class="error">{{ error }}</p>
-
-      <button @click="handleLogin" :disabled="loading">
-        {{ loading ? "Entrando..." : "Iniciar sesión" }}
-      </button>
+      <!-- ── REGISTRO ── -->
+      <template v-else>
+        <div class="field">
+          <label>Nombre completo</label>
+          <input v-model="nombre" placeholder="Juan Pérez" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input v-model="email" type="email" placeholder="correo@ejemplo.com" />
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input v-model="password" type="password" placeholder="••••••••" />
+        </div>
+        <div class="field">
+          <label>Matrícula</label>
+          <input v-model="matricula" placeholder="Ej: MED-4821" @input="validarMatricula" />
+          <span v-if="rolDetectado" class="rol-detectado">
+            ✅ Rol detectado: <strong>{{ rolDetectado }}</strong>
+          </span>
+          <span v-if="matriculaError" class="hint-error">{{ matriculaError }}</span>
+        </div>
+        <p v-if="error" class="error">{{ error }}</p>
+        <button @click="handleRegistro" :disabled="loading || !rolDetectado">
+          {{ loading ? "Registrando..." : "Crear cuenta" }}
+        </button>
+        <p class="toggle">
+          ¿Ya tienes cuenta?
+          <span @click="cambiarModo('login')">Inicia sesión</span>
+        </p>
+      </template>
 
     </div>
   </div>
@@ -39,13 +66,48 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/authStore";
+import axios from "axios";
 
-const email    = ref("");
-const password = ref("");
-const error    = ref("");
-const loading  = ref(false);
-const router   = useRouter();
-const auth     = useAuthStore();
+const modo           = ref("login");
+const email          = ref("");
+const password       = ref("");
+const nombre         = ref("");
+const matricula      = ref("");
+const rolDetectado   = ref("");
+const matriculaError = ref("");
+const error          = ref("");
+const loading        = ref(false);
+const router         = useRouter();
+const auth           = useAuthStore();
+
+function cambiarModo(m) {
+  modo.value           = m;
+  error.value          = "";
+  matriculaError.value = "";
+  rolDetectado.value   = "";
+  email.value          = "";
+  password.value       = "";
+  nombre.value         = "";
+  matricula.value      = "";
+}
+
+// Valida la matricula en tiempo real mientras el usuario escribe
+let timeout = null;
+async function validarMatricula() {
+  rolDetectado.value   = "";
+  matriculaError.value = "";
+  if (!matricula.value || matricula.value.length < 2) return;
+
+  clearTimeout(timeout);
+  timeout = setTimeout(async () => {
+    try {
+      const { data } = await axios.get(`/api/configuracion-roles/validar/${matricula.value}`);
+      rolDetectado.value = data.rol;
+    } catch {
+      matriculaError.value = "Matrícula no reconocida";
+    }
+  }, 500);
+}
 
 async function handleLogin() {
   error.value   = "";
@@ -55,6 +117,26 @@ async function handleLogin() {
     router.push("/");
   } catch {
     error.value = "Email o contraseña incorrectos";
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleRegistro() {
+  error.value   = "";
+  loading.value = true;
+  try {
+    await axios.post("/api/auth/register", {
+      nombre:    nombre.value,
+      email:     email.value,
+      password:  password.value,
+      matricula: matricula.value,
+    });
+    // Login automatico tras registro exitoso
+    await auth.login(email.value, password.value);
+    router.push("/");
+  } catch (e) {
+    error.value = e.response?.data?.detail || "Error al registrarse";
   } finally {
     loading.value = false;
   }
@@ -75,27 +157,16 @@ async function handleLogin() {
   background: white;
   padding: 2.5rem;
   border-radius: 16px;
-  width: 360px;
+  width: 380px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
   text-align: center;
 }
 
-.logo {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-}
+.logo { font-size: 3rem; margin-bottom: 0.5rem; }
 
-h1 {
-  margin: 0 0 0.25rem;
-  color: #b71c1c;
-  font-size: 1.5rem;
-}
+h1 { margin: 0 0 0.25rem; color: #b71c1c; font-size: 1.5rem; }
 
-.subtitle {
-  color: #999;
-  margin: 0 0 1.5rem;
-  font-size: 0.9rem;
-}
+.subtitle { color: #999; margin: 0 0 1.5rem; font-size: 0.9rem; }
 
 .field {
   display: flex;
@@ -104,12 +175,7 @@ h1 {
   margin-bottom: 1rem;
 }
 
-label {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 0.3rem;
-}
+label { font-size: 0.8rem; font-weight: 600; color: #555; margin-bottom: 0.3rem; }
 
 input {
   padding: 0.65rem 0.9rem;
@@ -119,10 +185,7 @@ input {
   outline: none;
   transition: border-color 0.2s;
 }
-
-input:focus {
-  border-color: #e53935;
-}
+input:focus { border-color: #e53935; }
 
 button {
   width: 100%;
@@ -137,19 +200,33 @@ button {
   margin-top: 0.5rem;
   transition: background 0.2s;
 }
+button:hover:not(:disabled) { background: #b71c1c; }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
 
-button:hover:not(:disabled) {
-  background: #b71c1c;
+.error { color: #e53935; font-size: 0.85rem; margin: 0.25rem 0; }
+
+.rol-detectado {
+  font-size: 0.8rem;
+  color: #2e7d32;
+  margin-top: 0.25rem;
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.error {
+.hint-error {
+  font-size: 0.8rem;
   color: #e53935;
-  font-size: 0.85rem;
-  margin: 0.25rem 0;
+  margin-top: 0.25rem;
 }
+
+.toggle {
+  margin-top: 1.25rem;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.toggle span {
+  color: #e53935;
+  cursor: pointer;
+  font-weight: 600;
+}
+.toggle span:hover { text-decoration: underline; }
 </style>

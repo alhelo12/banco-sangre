@@ -15,6 +15,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    path: "/configuracion-roles",
+    name: "ConfiguracionRoles",
+    component: () => import("@/views/ConfiguracionRolesView.vue"),
+    meta: { requiresAuth: true },
+  },
+  {
     path: "/usuarios",
     name: "Usuarios",
     component: () => import("@/views/UsuariosView.vue"),
