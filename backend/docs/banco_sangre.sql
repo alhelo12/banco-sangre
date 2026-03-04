@@ -140,4 +140,4 @@ CREATE INDEX idx_solicitudes_tipo_sangre ON solicitudes(tipo_sangre);
 -- ============================================================
 
 INSERT INTO usuarios (nombre, email, password, rol) VALUES
-('Administrador', 'admin@bancosangre.com', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 'admin');
+('Administrador', 'admin@bancosangre.com', '$2b$12$uBswjFcA9WnAfeTwRamqqOiOuXu7nmTAwYlNd3xS.NU4qCag/DfVe', 'admin');
