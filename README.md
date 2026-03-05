@@ -160,11 +160,13 @@ SECRET_KEY=una_clave_segura_de_al_menos_32_caracteres
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 ```
 
-Arranca el servidor:
+Arranca el servidor con SSL:
 
 ```powershell
-uvicorn app.main:app --reload --port 8000
+python run.py
 ```
+
+> El servidor estará disponible en `https://localhost:8000`
 
 ### 4. Configurar el Frontend
 
@@ -182,8 +184,69 @@ npm run dev
 
 | Servicio | URL |
 |----------|-----|
-| App | http://localhost:5173 |
-| API Docs (Swagger) | http://localhost:8000/api/docs |
+| App | https://localhost:5173 |
+| API Docs (Swagger) | https://localhost:8000/api/docs |
+
+> Al usar certificados autofirmados el navegador mostrara una advertencia.
+> Haz click en "Avanzado" → "Continuar de todas formas" para acceder.
+
+---
+
+## Certificados SSL
+
+Los archivos `certs/key.pem` y `certs/cert.pem` no se incluyen en el repositorio.
+Debes generarlos manualmente antes de arrancar el proyecto.
+Ver instrucciones completas en `certs/README.md`.
+
+---
+
+## Despliegue en Railway (produccion)
+
+[Railway](https://railway.app) permite desplegar backend, frontend y base de datos
+de forma gratuita conectando directamente el repositorio de GitHub.
+
+### Pasos
+
+**1. Crear cuenta en Railway**
+Ve a https://railway.app y regístrate con tu cuenta de GitHub.
+
+**2. Crear un nuevo proyecto**
+Click en `New Project` → `Deploy from GitHub repo` → selecciona `banco-sangre`.
+
+**3. Agregar PostgreSQL**
+Dentro del proyecto click en `Add Service` → `Database` → `PostgreSQL`.
+Railway crea la base de datos y genera la variable `DATABASE_URL` automaticamente.
+
+**4. Configurar el Backend**
+Click en el servicio del backend → `Settings` → `Variables` y agrega:
+```
+DATABASE_URL  →  (usar la que Railway genero automaticamente)
+SECRET_KEY    →  una_clave_segura_de_al_menos_32_caracteres
+ACCESS_TOKEN_EXPIRE_MINUTES → 60
+```
+
+En `Settings` → `Deploy` configura:
+```
+Root Directory:  backend
+Start Command:   uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+**5. Configurar el Frontend**
+Click en `Add Service` → `GitHub Repo` → selecciona el mismo repo.
+En `Settings` → `Deploy` configura:
+```
+Root Directory:  frontend
+Build Command:   npm run build
+Start Command:   npx serve dist
+```
+
+**6. Certificados SSL en Railway**
+Railway provee HTTPS automaticamente con certificados de Let's Encrypt.
+No necesitas configurar nada adicional para SSL en produccion.
+
+**7. Ejecutar el schema SQL**
+Una vez desplegado, conectate a la BD desde Railway y ejecuta el contenido
+de `backend/docs/banco_sangre.sql` para crear las tablas.
 
 ---
 

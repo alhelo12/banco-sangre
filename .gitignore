@@ -1,9 +1,10 @@
 # Secretos
 .env
 
-# Certificados SSL
-certs/
+# Certificados SSL (los archivos .pem no se suben al repo)
 *.pem
+certs/key.pem
+certs/cert.pem
 
 # Python
 __pycache__/
