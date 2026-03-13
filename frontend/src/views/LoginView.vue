@@ -67,6 +67,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/store/authStore";
 import axios from "axios";
+import api from "@/apiServices/authService";
 
 const modo           = ref("login");
 const email          = ref("");
@@ -101,7 +102,7 @@ async function validarMatricula() {
   clearTimeout(timeout);
   timeout = setTimeout(async () => {
     try {
-      const { data } = await axios.get(`/api/auth/validar-matricula/${matricula.value}`);
+      const { data } = await api.get(`/api/auth/validar-matricula/${matricula.value}`);
       rolDetectado.value = data.rol;
     } catch {
       matriculaError.value = "Matrícula no reconocida";
@@ -126,7 +127,7 @@ async function handleRegistro() {
   error.value   = "";
   loading.value = true;
   try {
-    await axios.post("/api/auth/register", {
+    await api.post("/api/auth/register", {
       nombre:    nombre.value,
       email:     email.value,
       password:  password.value,
