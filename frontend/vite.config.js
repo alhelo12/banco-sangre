@@ -4,6 +4,12 @@ import { fileURLToPath, URL } from "node:url";
 import fs from "node:fs";
 import path from "node:path";
 
+const isDev = process.env.NODE_ENV !== "production";
+
+const certPath = path.resolve(__dirname, "../certs/cert.pem");
+const keyPath  = path.resolve(__dirname, "../certs/key.pem");
+const hasCerts = isDev && fs.existsSync(certPath) && fs.existsSync(keyPath);
+
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -13,15 +19,14 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    https: {
-      key:  fs.readFileSync(path.resolve(__dirname, "../certs/key.pem")),
-      cert: fs.readFileSync(path.resolve(__dirname, "../certs/cert.pem")),
-    },
+    https: hasCerts
+      ? { key: fs.readFileSync(keyPath), cert: fs.readFileSync(certPath) }
+      : false,
     proxy: {
       "/api": {
-        target: "https://localhost:8000",
+        target: hasCerts ? "https://localhost:8000" : "http://localhost:8000",
         changeOrigin: true,
-        secure: false, // Acepta certificados autofirmados en desarrollo
+        secure: false,
       },
     },
   },
