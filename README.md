@@ -64,6 +64,7 @@ El proyecto utiliza una Arquitectura Multicapa para separar responsabilidades y 
 │   ├── docs/                       # Documentacion de la BD
 │   │   ├── banco_sangre.sql        # Schema SQL
 │   │   └── README.md               # Relaciones entre tablas
+│   ├── run.py                      # Arranque con SSL (solo desarrollo local)
 │   ├── .env                        # Variables de entorno (Ignorado en Git)
 │   └── requirements.txt            # Dependencias de Python
 │
@@ -95,6 +96,7 @@ El proyecto utiliza una Arquitectura Multicapa para separar responsabilidades y 
 │   └── package.json
 │
 ├── certs/                          # Certificados SSL (Ignorado en Git)
+│   └── README.md                   # Instrucciones para generar certificados
 ├── .gitignore
 └── README.md
 ```
@@ -115,15 +117,16 @@ El proyecto utiliza una Arquitectura Multicapa para separar responsabilidades y 
 
 ---
 
-## Requisitos
+## Requisitos (desarrollo local)
 
 - Python 3.11+
 - Node.js 20+
 - PostgreSQL (instalado localmente)
+- OpenSSL (para generar certificados SSL)
 
 ---
 
-## Instrucciones de instalacion
+## Instalacion local
 
 ### 1. Clonar el repositorio
 
@@ -132,18 +135,33 @@ git clone https://github.com/tu-usuario/banco-sangre.git
 cd banco-sangre
 ```
 
-### 2. Crear la base de datos en PostgreSQL
+### 2. Generar certificados SSL
+
+```powershell
+# Windows
+$env:OPENSSL_CONF = "C:\Program Files\OpenSSL-Win64\bin\openssl.cfg"
+& "C:\Program Files\OpenSSL-Win64\bin\openssl.exe" req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+```
+
+```bash
+# Linux / Mac
+openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+```
+
+> Ver instrucciones completas en `certs/README.md`.
+
+### 3. Crear la base de datos en PostgreSQL
 
 ```powershell
 psql -U postgres -c "CREATE DATABASE banco_sangre;"
 psql -U postgres -d banco_sangre -f backend/docs/banco_sangre.sql
 ```
 
-> Si usas pgAdmin puedes abrir el archivo `backend/docs/banco_sangre.sql` y ejecutarlo directamente desde el Query Tool.
+> Si usas pgAdmin puedes abrir `backend/docs/banco_sangre.sql` y ejecutarlo desde el Query Tool.
 >
-> Nota: Si al ejecutar el .sql ocurre algun error, no te preocupes. Al arrancar el servidor FastAPI creara las tablas automaticamente gracias a SQLAlchemy.
+> Nota: Si al ejecutar el .sql ocurre algun error no te preocupes. Al arrancar el servidor FastAPI creara las tablas automaticamente gracias a SQLAlchemy.
 
-### 3. Configurar el Backend
+### 4. Configurar el Backend
 
 ```powershell
 cd backend
@@ -152,7 +170,7 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Edita el archivo `.env` con tus credenciales:
+Crea el archivo `.env` con tus credenciales:
 
 ```
 DATABASE_URL=postgresql://postgres:TU_PASSWORD@localhost:5432/banco_sangre
@@ -166,9 +184,9 @@ Arranca el servidor con SSL:
 python run.py
 ```
 
-> El servidor estará disponible en `https://localhost:8000`
+> El servidor estara disponible en `https://localhost:8000`
 
-### 4. Configurar el Frontend
+### 5. Configurar el Frontend
 
 Abre una nueva terminal:
 
@@ -178,25 +196,15 @@ npm install
 npm run dev
 ```
 
----
-
-## URLs
+### URLs locales
 
 | Servicio | URL |
 |----------|-----|
 | App | https://localhost:5173 |
 | API Docs (Swagger) | https://localhost:8000/api/docs |
 
-> Al usar certificados autofirmados el navegador mostrara una advertencia.
+> El navegador mostrara una advertencia por el certificado autofirmado.
 > Haz click en "Avanzado" → "Continuar de todas formas" para acceder.
-
----
-
-## Certificados SSL
-
-Los archivos `certs/key.pem` y `certs/cert.pem` no se incluyen en el repositorio.
-Debes generarlos manualmente antes de arrancar el proyecto.
-Ver instrucciones completas en `certs/README.md`.
 
 ---
 
@@ -204,49 +212,74 @@ Ver instrucciones completas en `certs/README.md`.
 
 [Railway](https://railway.app) permite desplegar backend, frontend y base de datos
 de forma gratuita conectando directamente el repositorio de GitHub.
+Railway provee HTTPS automatico con Let's Encrypt, no necesitas configurar SSL manualmente.
 
-### Pasos
+### Paso 1 — Crear cuenta y proyecto
 
-**1. Crear cuenta en Railway**
-Ve a https://railway.app y regístrate con tu cuenta de GitHub.
+1. Ve a https://railway.app y registrate con tu cuenta de GitHub
+2. Click en `New Project` → `Deploy from GitHub repo` → selecciona `banco-sangre`
 
-**2. Crear un nuevo proyecto**
-Click en `New Project` → `Deploy from GitHub repo` → selecciona `banco-sangre`.
+### Paso 2 — Agregar PostgreSQL
 
-**3. Agregar PostgreSQL**
 Dentro del proyecto click en `Add Service` → `Database` → `PostgreSQL`.
-Railway crea la base de datos y genera la variable `DATABASE_URL` automaticamente.
 
-**4. Configurar el Backend**
-Click en el servicio del backend → `Settings` → `Variables` y agrega:
-```
-DATABASE_URL  →  (usar la que Railway genero automaticamente)
-SECRET_KEY    →  una_clave_segura_de_al_menos_32_caracteres
-ACCESS_TOKEN_EXPIRE_MINUTES → 60
-```
+### Paso 3 — Configurar el Backend
 
-En `Settings` → `Deploy` configura:
+Click en el servicio del backend → `Settings`:
+
+**Build & Deploy:**
 ```
 Root Directory:  backend
 Start Command:   uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
-**5. Configurar el Frontend**
+**Variables:**
+```
+DATABASE_URL             ${{Postgres.DATABASE_URL}}
+SECRET_KEY               una_clave_segura_de_al_menos_32_caracteres
+ACCESS_TOKEN_EXPIRE_MINUTES  60
+```
+
+> Usar `${{Postgres.DATABASE_URL}}` conecta el backend directamente al servicio de Postgres del proyecto sin exponer credenciales.
+
+### Paso 4 — Configurar el Frontend
+
 Click en `Add Service` → `GitHub Repo` → selecciona el mismo repo.
-En `Settings` → `Deploy` configura:
+
+**Build & Deploy:**
 ```
 Root Directory:  frontend
 Build Command:   npm run build
 Start Command:   npx serve dist
 ```
 
-**6. Certificados SSL en Railway**
-Railway provee HTTPS automaticamente con certificados de Let's Encrypt.
-No necesitas configurar nada adicional para SSL en produccion.
+**Variables:**
+```
+VITE_API_URL   https://TU-BACKEND.up.railway.app
+```
 
-**7. Ejecutar el schema SQL**
-Una vez desplegado, conectate a la BD desde Railway y ejecuta el contenido
-de `backend/docs/banco_sangre.sql` para crear las tablas.
+> Reemplaza `TU-BACKEND` con el dominio generado por Railway para el backend.
+> Lo encuentras en backend → `Settings` → `Networking` → `Generate Domain`.
+
+### Paso 5 — Insertar datos iniciales
+
+Las tablas se crean automaticamente al arrancar el backend. Solo falta insertar
+los datos iniciales. Conectate a la BD desde pgAdmin usando las credenciales de
+`Postgres → Connect → Public Network` y ejecuta:
+
+```sql
+INSERT INTO usuarios (nombre, email, password, rol) VALUES
+('Administrador', 'admin@bancosangre.com', '$2b$12$uBswjFcA9WnAfeTwRamqqOiOuXu7nmTAwYlNd3xS.NU4qCag/DfVe', 'admin');
+
+INSERT INTO configuracion_roles (prefijo, rol, descripcion) VALUES
+('MED', 'medico', 'Personal medico'),
+('ENF', 'enfermero', 'Personal de enfermeria');
+```
+
+### Paso 6 — Compartir la app
+
+El link publico de la app lo encuentras en:
+**banco-sangre\frontend → Settings → Networking → Domain**
 
 ---
 
@@ -255,7 +288,7 @@ de `backend/docs/banco_sangre.sql` para crear las tablas.
 ```
 1. Iniciar sesion con el admin predefinido:
    Email: admin@bancosangre.com / Password: admin123
-2. Configurar los prefijos de matricula en la seccion Configuracion
+2. Ir a Configuracion y verificar o agregar prefijos de matricula
 3. El personal se registra en la pantalla de registro con su matricula
    → el sistema asigna el rol automaticamente segun el prefijo
 4. Crear un donante
@@ -265,6 +298,8 @@ de `backend/docs/banco_sangre.sql` para crear las tablas.
 8. Registrar la transfusion con el ID de la solicitud y del inventario
 9. La solicitud cambia a "entregada" y el inventario a "usado" automaticamente
 ```
+
+---
 
 ## Roles y permisos
 
@@ -278,3 +313,6 @@ de `backend/docs/banco_sangre.sql` para crear las tablas.
 | Inventario       | ✅    | ✅        | ❌     |
 | Solicitudes      | ✅    | ✅        | ✅     |
 | Transfusiones    | ✅    | ✅        | ✅     |
+
+> El admin predefinido puede crear usuarios adicionales con rol admin desde la vista Usuarios.
+> El endpoint de registro solo permite crear usuarios con rol medico o enfermero mediante matricula.
